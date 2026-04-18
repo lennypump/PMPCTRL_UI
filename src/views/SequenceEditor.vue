@@ -119,6 +119,7 @@
           </div>
           <div class="d-flex gap-2">
             <v-number-input
+              v-if="step.action !== 'release' && step.action !== 'release_to_base'"
               v-model="step.duration"
               density="comfortable"
               hide-details
@@ -141,6 +142,12 @@
               :step="10"
               class="flex-grow-1"
             ></v-number-input>
+            <div
+              v-if="step.action === 'release' || step.action === 'release_to_base'"
+              class="text-caption text-grey align-self-center"
+            >
+              {{ step.action === 'release' ? 'Lässt ab bis Maximum' : 'Lässt ab bis Basis' }}
+            </div>
           </div>
         </div>
 
@@ -227,7 +234,7 @@ const activating = ref(false)
 const snackbar = ref(false)
 const snackbarText = ref('')
 
-const actionTypes = ['hold', 'interval', 'fading', 'release']
+const actionTypes = ['hold', 'interval', 'fading', 'release', 'release_to_base']
 
 onMounted(async () => {
   await store.fetchSequences()
@@ -312,10 +319,10 @@ function buildSequenceData() {
     base_pressure: editBasePressure.value,
     level_factor: editLevelFactor.value,
     steps: editSteps.value.map(s => {
-      const step = { action: s.action, duration: s.duration, label: s.label || null }
-      if (s.action === 'hold' || s.action === 'interval') {
-        step.pressure = s.pressure
-      }
+      const noParams = s.action === 'release' || s.action === 'release_to_base'
+      const step = { action: s.action, label: s.label || null }
+      if (!noParams) step.duration = s.duration
+      if (s.action === 'hold' || s.action === 'interval') step.pressure = s.pressure
       return step
     }),
   }
