@@ -1,5 +1,18 @@
 import { defineStore } from "pinia"
 import { computed, ref } from 'vue'
+import axios from 'axios'
+
+function getApiUrl() {
+  if (import.meta.env.MODE === 'development') {
+    return import.meta.env.VITE_PMPCTRL_API_URL
+  }
+  const protocol = document.location.protocol
+  const hostname = document.location.hostname
+  const port = import.meta.env.VITE_PMPCTRL_API_PORT
+  return `${protocol}//${hostname}:${port}/`
+}
+
+const API_HEADER = { headers: { 'Content-Type': 'application/json' } }
 
 export const usePmpctrlStore = defineStore('pmpctrl', () => {
   const MBAR_TO_INHG = 33.86389
@@ -39,6 +52,10 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
       release_time : ref()
     }
   }
+
+  const sequences = ref([])
+  const activeSequence = ref(null)
+  const sequenceStatus = ref(null)
 
   for (let i = 0; i < PRESSURE_HISTORY_LENGTH; i++) {
     pressure.actual_history.value.push(0.0)
@@ -159,7 +176,34 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
     pressure.actual_history.value.push(actual)
     pressure.target.target_history.value.shift()
     pressure.target.target_history.value.push(target)
+  }
 
+  async function fetchSequences() {
+    const res = await axios.get(getApiUrl() + 'sequences')
+    sequences.value = res.data
+  }
+
+  async function loadSequence(name) {
+    const res = await axios.get(getApiUrl() + `sequences/${name}`)
+    activeSequence.value = res.data
+  }
+
+  async function saveSequence(name, data) {
+    await axios.put(getApiUrl() + `sequences/${name}`, data, API_HEADER)
+  }
+
+  async function deleteSequence(name) {
+    await axios.delete(getApiUrl() + `sequences/${name}`)
+    sequences.value = sequences.value.filter(s => s !== name)
+  }
+
+  async function activateSequence(name) {
+    await axios.post(getApiUrl() + `sequences/${name}/activate`)
+  }
+
+  async function fetchSequenceStatus() {
+    const res = await axios.get(getApiUrl() + 'sequence/status')
+    sequenceStatus.value = res.data
   }
 
   return { sessionBool,
@@ -171,6 +215,9 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
            valve,
            pressure,
            mode,
+           sequences,
+           activeSequence,
+           sequenceStatus,
            getSession,
            getPump,
            getValve,
@@ -187,6 +234,12 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
            getPressureTargetDiff,
            getPressureTargetDiffInhg,
            getModeActive,
-           pushPressureHistoryValues
+           pushPressureHistoryValues,
+           fetchSequences,
+           loadSequence,
+           saveSequence,
+           deleteSequence,
+           activateSequence,
+           fetchSequenceStatus,
          }
 })

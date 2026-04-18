@@ -19,7 +19,7 @@
                 density="comfortable"
                 v-model="selectedMode"
                 hide-details="true"
-                :items="store.mode.available"
+                :items="modeItems"
               >
               <template v-slot:item="{ props, item }">
                 <v-list-item
@@ -31,7 +31,7 @@
               </v-select>
             </td>
           </tr>
-          <tr :class="{'d-none': showPulsatingSettings}">
+          <tr :class="{'d-none': showPulsatingSettings || showSequenceSettings}">
             <td>TARGET TOL PLUS (+)</td>
             <td>
               <v-number-input
@@ -46,7 +46,7 @@
               ></v-number-input>
             </td>
           </tr>
-          <tr :class="{'d-none': showPulsatingSettings}">
+          <tr :class="{'d-none': showPulsatingSettings || showSequenceSettings}">
             <td>TARGET TOL MINUS (-)</td>
             <td>
               <v-number-input
@@ -124,6 +124,47 @@
         </tbody>
       </table>
     </div>
+
+    <div v-if="showSequenceSettings" class="ml-2 mr-2 mt-2">
+      <div class="bg-grey-darken-3 pa-2 rounded">
+        <div class="text-caption mb-1">SEQUENCE_CONTROL</div>
+        <div class="mb-2">
+          Aktiv: <strong>{{ store.sequenceStatus?.name || '—' }}</strong>
+        </div>
+        <v-btn
+          class="w-100 mb-3"
+          height="40"
+          color="grey-darken-2"
+          append-icon="mdi-arrow-right"
+          @click="router.push('/sequences')"
+        >
+          Sequences verwalten
+        </v-btn>
+        <div class="text-caption mb-1">LEVEL</div>
+        <v-slider
+          v-model="levelFactor"
+          min="0.5"
+          max="1.5"
+          step="0.01"
+          hide-details
+          thumb-label
+        >
+          <template v-slot:thumb-label>{{ Math.round(levelFactor * 100) }}%</template>
+        </v-slider>
+        <div class="text-center mb-2">{{ Math.round(levelFactor * 100) }}%</div>
+        <v-btn
+          class="w-100"
+          height="40"
+          color="grey-darken-2"
+          prepend-icon="mdi-check"
+          :loading="applyingLevel"
+          @click="applyLevel"
+        >
+          APPLY
+        </v-btn>
+      </div>
+    </div>
+
     <div class="ml-2 mr-2 mt-4 mb-2 d-flex justify-center">
       <v-btn
         class="text-h5 w-100"
@@ -141,6 +182,7 @@
 <script setup>
   import { usePmpctrlStore } from '@/store'
   import { computed, onBeforeUpdate, ref } from 'vue'
+  import { useRouter } from 'vue-router'
   import { VNumberInput } from 'vuetify/labs/VNumberInput'
 
   const emit = defineEmits(['updateTolerances',
@@ -149,6 +191,7 @@
                             'updateModePulsating'])
 
   const store = usePmpctrlStore()
+  const router = useRouter()
 
   let selectedMode = ref()
   let tolerancePlus = ref()
@@ -157,6 +200,8 @@
   let intervalTime = ref()
   let pumpTime = ref()
   let releaseTime = ref()
+  let levelFactor = ref(1.0)
+  let applyingLevel = ref(false)
 
   let oldMode
   let oldTolerancePlus
@@ -166,6 +211,14 @@
   let oldPumpTime
   let oldReleaseTime
 
+  const modeItems = computed(() => {
+    const available = store.mode.available
+    if (Array.isArray(available) && !available.includes('sequence')) {
+      return [...available, 'sequence']
+    }
+    return available || []
+  })
+
   const showPulsatingSettings = computed(() => {
     return selectedMode.value == 'pulsating' ? true : false
   })
@@ -173,6 +226,23 @@
   const showIntervalSettings = computed(() => {
     return selectedMode.value == 'interval' ? true : false
   })
+
+  const showSequenceSettings = computed(() => {
+    return selectedMode.value === 'sequence'
+  })
+
+  async function applyLevel() {
+    if (!store.activeSequence) return
+    applyingLevel.value = true
+    try {
+      const updated = { ...store.activeSequence, level_factor: levelFactor.value }
+      await store.saveSequence(store.activeSequence.name, updated)
+      await store.activateSequence(store.activeSequence.name)
+      store.activeSequence.level_factor = levelFactor.value
+    } finally {
+      applyingLevel.value = false
+    }
+  }
 
   function update() {
     emit('updateMode', selectedMode.value)
@@ -228,6 +298,9 @@
     if (oldReleaseTime != store.mode.pulsating.release_time) {
       releaseTime.value = store.mode.pulsating.release_time
       oldReleaseTime = store.mode.pulsating.release_time
+    }
+    if (store.activeSequence?.level_factor !== undefined) {
+      levelFactor.value = store.activeSequence.level_factor
     }
   })
 </script>
