@@ -337,8 +337,9 @@ async function save() {
     await store.fetchSequences()
     selectedName.value = editName.value
     showMessage('Sequence gespeichert')
-  } catch {
-    showMessage('Fehler beim Speichern')
+  } catch (e) {
+    const detail = e?.response?.data?.detail || e?.message || String(e)
+    showMessage(`Fehler: ${detail}`)
   } finally {
     saving.value = false
   }
@@ -354,8 +355,9 @@ async function saveAndActivate() {
     selectedName.value = editName.value
     await store.activateSequence(editName.value)
     showMessage(`"${editName.value}" gespeichert und aktiviert`)
-  } catch {
-    showMessage('Fehler')
+  } catch (e) {
+    const detail = e?.response?.data?.detail || e?.message || String(e)
+    showMessage(`Fehler: ${detail}`)
   } finally {
     savingAndActivating.value = false
   }
