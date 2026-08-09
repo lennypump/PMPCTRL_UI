@@ -6,6 +6,7 @@ import PressureTarget from '../components/PressureTarget.vue';
 import ControlPump from '../components/ControlPump.vue';
 import ControlSession from '../components/ControlSession.vue';
 import ControlValve from '../components/ControlValve.vue';
+import ControlLights from '../components/ControlLights.vue';
 import ConfigSession from '../components/ConfigSession.vue';
 import InfoPanel from '../components/InfoPanel.vue';
 import SequenceStatus from '../components/SequenceStatus.vue';
@@ -76,6 +77,7 @@ async function getApiRoot() {
   data.session == 'on' ? store.sessionBool = true : store.sessionBool = false
   store.pump = data.pump
   store.valve = data.valve
+  store.lightshow = data.lightshow
   store.timeUtcNow = data.time_utc_now
   store.timeUtcSessionStart = data.time_utc_session_start
   store.lastSessionDuration = data.last_session_duration
@@ -122,6 +124,14 @@ function pumpOn() {
 
 function pumpOff() {
   makeApiPutCall('pump/off')
+}
+
+function lightsOn() {
+  makeApiPutCall('lights/on')
+}
+
+function lightsOff() {
+  makeApiPutCall('lights/off')
 }
 
 function updateMode(value) {
@@ -202,6 +212,12 @@ onMounted(() => {
         @close="closeValve">
       </ControlValve>
     </div>
+    <div class="grid-lights">
+      <ControlLights
+        @lightsOn="lightsOn"
+        @lightsOff="lightsOff">
+      </ControlLights>
+    </div>
     <div class="grid-mode">
       <ConfigSession
         @updateMode="updateMode"
@@ -230,6 +246,7 @@ onMounted(() => {
     "pumptarget"
     "pump"
     "valve"
+    "lights"
     "mode"
     "seqstatus";
 }
@@ -240,6 +257,7 @@ onMounted(() => {
 .grid-pumptarget { grid-area: pumptarget; }
 .grid-pump       { grid-area: pump; }
 .grid-valve      { grid-area: valve; }
+.grid-lights     { grid-area: lights; }
 .grid-mode       { grid-area: mode; }
 .grid-seqstatus  { grid-area: seqstatus; }
 
@@ -252,6 +270,7 @@ onMounted(() => {
       "session    sensor"
       "pumptarget sensor"
       "pump       valve"
+      "lights     lights"
       "mode       mode"
       "seqstatus  seqstatus";
   }

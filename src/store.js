@@ -25,6 +25,7 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
   const lastSessionDuration = ref()
   const pump = ref('UNKNOWN')
   const valve = ref('UNKNOWN')
+  const lightshow = ref('UNKNOWN')
 
   const pressure = {
       actual : ref(),
@@ -99,6 +100,10 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
 
   const getValve = computed(() => {
     return valve.value.toUpperCase()
+  })
+
+  const getLightshow = computed(() => {
+    return lightshow.value.toUpperCase()
   })
 
   const getPressureActual = computed(() => {
@@ -213,6 +218,7 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
            lastSessionDuration,
            pump,
            valve,
+           lightshow,
            pressure,
            mode,
            sequences,
@@ -221,6 +227,7 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
            getSession,
            getPump,
            getValve,
+           getLightshow,
            getSessionDuration,
            getLastSessionDuration,
            getPressureActual,
