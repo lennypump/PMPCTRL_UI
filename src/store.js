@@ -55,6 +55,11 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
     }
   }
 
+  // LED strip colors per profile ({ hold: '#0050ff', ... }), shared with the knob
+  const ledColors = ref({})
+  const ledColorDefaults = ref({})
+  const ledColorPresets = ref({})
+
   const sequences = ref([])
   const activeSequence = ref(null)
   const sequenceStatus = ref(null)
@@ -212,6 +217,27 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
     sequenceStatus.value = res.data
   }
 
+  function applyLedColorResponse(data) {
+    ledColors.value = data.colors
+    ledColorDefaults.value = data.defaults
+    ledColorPresets.value = data.presets
+  }
+
+  async function fetchLedColors() {
+    const res = await axios.get(getApiUrl() + 'lights/colors')
+    applyLedColorResponse(res.data)
+  }
+
+  async function saveLedColor(key, hex) {
+    const res = await axios.put(getApiUrl() + 'lights/colors', { [key]: hex }, API_HEADER)
+    applyLedColorResponse(res.data)
+  }
+
+  async function resetLedColors() {
+    const res = await axios.put(getApiUrl() + 'lights/colors/reset')
+    applyLedColorResponse(res.data)
+  }
+
   return { sessionBool,
            session,
            timeUtcNow,
@@ -222,6 +248,9 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
            lightshow,
            pressure,
            mode,
+           ledColors,
+           ledColorDefaults,
+           ledColorPresets,
            sequences,
            activeSequence,
            sequenceStatus,
@@ -249,5 +278,8 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
            deleteSequence,
            activateSequence,
            fetchSequenceStatus,
+           fetchLedColors,
+           saveLedColor,
+           resetLedColors,
          }
 })
