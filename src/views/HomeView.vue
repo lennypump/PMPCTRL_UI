@@ -82,6 +82,7 @@ async function getApiRoot() {
   store.timeUtcSessionStart = data.time_utc_session_start
   store.lastSessionDuration = data.last_session_duration
   store.pressure.actual = data.pressure.actual
+  store.pressure.sensor_available = data.pressure.sensor_available
   store.pressure.setpoint = data.pressure.setpoint
   store.pressure.auto_setpoint = data.pressure.auto_setpoint
   store.pressure.target.target = data.pressure.target.target

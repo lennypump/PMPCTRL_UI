@@ -33,7 +33,9 @@
     <div class="ml-2 mr-2 pb-2 font-weight-black" style="line-height: 0.2;">
       {{ store.getPressureSetpointInhg }} &#8793; 0
     </div>
-    <div class="ma-2 d-flex flex-row position-relative bg-grey-darken-3">
+
+    <!-- Grafik korrekt innerhalb der Kachel -->
+    <div class="ma-2 bg-grey-darken-3" style="position: relative; height: 150px;">
       <v-sparkline
         :model-value="store.pressure.actual_history"
         line-width=2
@@ -43,9 +45,9 @@
         smooth
         :max="chartMax"
         :min="chartMin"
+        style="width: 100%; height: 100%"
       ></v-sparkline>
       <v-sparkline
-        class="position-absolute top-0 left-0"
         :model-value="store.pressure.target.target_history"
         line-width=1
         color="blue"
@@ -54,8 +56,20 @@
         smooth
         :max="chartMax"
         :min="chartMin"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%"
       ></v-sparkline>
     </div>
+
+    <!-- Statusmeldung -->
+    <div class="ml-2 mr-2 mt-1 text-caption">
+      <span v-if="store.pressure.sensor_available === true" class="text-green">
+        ✓ Sensor aktiv
+      </span>
+      <span v-else-if="store.pressure.sensor_available === false" class="text-red">
+        ✗ Sensor nicht verfügbar
+      </span>
+    </div>
+
     <div class="ml-2 mr-2 d-flex flex-row justify-end">
       <v-switch
         v-model="autoSetpoint"
@@ -97,3 +111,4 @@ function changeAutoSetpoint() {
   emit('changeAutoSetpoint', autoSetpoint.value)
 }
 </script>
+

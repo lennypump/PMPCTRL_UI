@@ -29,6 +29,7 @@ export const usePmpctrlStore = defineStore('pmpctrl', () => {
 
   const pressure = {
       actual : ref(),
+      sensor_available : ref(),
       actual_history : ref([]),
       setpoint : ref(),
       auto_setpoint : ref(),
